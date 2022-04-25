@@ -47,6 +47,7 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/io/pcd_io.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -151,26 +152,14 @@ void removeClosedPointCloud(const pcl::PointCloud<PointT> &cloud_in,
     cloud_out.is_dense = cloud_in.is_dense;
 }
 
-void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
+void laserCloudHandler(const pcl::PointCloud<pcl::PointXYZ>::Ptr pLaserCloud)
 {
-    if (!systemInited)
-    { 
-        systemInitCount++;
-        if (systemInitCount >= systemDelay)
-        {
-            systemInited = true;
-        }
-        else
-            return;
-    }
-
     TicToc t_whole;
     TicToc t_prepare;
     std::vector<int> scanStartInd(N_SCANS, 0);
     std::vector<int> scanEndInd(N_SCANS, 0);
 
-    pcl::PointCloud<pcl::PointXYZ> laserCloudIn;
-    pcl::fromROSMsg(*laserCloudMsg, laserCloudIn);
+    pcl::PointCloud<pcl::PointXYZ> laserCloudIn = *(pLaserCloud);
     std::vector<int> indices;
 
     pcl::removeNaNFromPointCloud(laserCloudIn, laserCloudIn, indices);
@@ -288,8 +277,7 @@ void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
         }
 
         float relTime = (ori - startOri) / (endOri - startOri);
-//        point.intensity = scanID + scanPeriod * relTime; // TODO: Is there any impact on odometry?
-//        point.intensity = laserCloudIn.points[i].
+        point.intensity = scanID + scanPeriod * relTime;
         laserCloudScans[scanID].push_back(point); 
     }
     
@@ -459,78 +447,23 @@ void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
 
         surfPointsLessFlat += surfPointsLessFlatScanDS;
     }
-    printf("sort q time %f \n", t_q_sort);
-    printf("seperate points time %f \n", t_pts.toc());
+    printf("Sort q time %f \n", t_q_sort);
+    printf("Separate points time %f \n", t_pts.toc());
 
-
-    sensor_msgs::PointCloud2 laserCloudOutMsg;
-    pcl::toROSMsg(*laserCloud, laserCloudOutMsg);
-    laserCloudOutMsg.header.stamp = laserCloudMsg->header.stamp;
-    laserCloudOutMsg.header.frame_id = "camera_init";
-    pubLaserCloud.publish(laserCloudOutMsg);
-
-    sensor_msgs::PointCloud2 cornerPointsSharpMsg;
-    pcl::toROSMsg(cornerPointsSharp, cornerPointsSharpMsg);
-    cornerPointsSharpMsg.header.stamp = laserCloudMsg->header.stamp;
-    cornerPointsSharpMsg.header.frame_id = "camera_init";
-    pubCornerPointsSharp.publish(cornerPointsSharpMsg);
-
-    sensor_msgs::PointCloud2 cornerPointsLessSharpMsg;
-    pcl::toROSMsg(cornerPointsLessSharp, cornerPointsLessSharpMsg);
-    cornerPointsLessSharpMsg.header.stamp = laserCloudMsg->header.stamp;
-    cornerPointsLessSharpMsg.header.frame_id = "camera_init";
-    pubCornerPointsLessSharp.publish(cornerPointsLessSharpMsg);
-
-    sensor_msgs::PointCloud2 surfPointsFlat2;
-    pcl::toROSMsg(surfPointsFlat, surfPointsFlat2);
-    surfPointsFlat2.header.stamp = laserCloudMsg->header.stamp;
-    surfPointsFlat2.header.frame_id = "camera_init";
-    pubSurfPointsFlat.publish(surfPointsFlat2);
-
-    sensor_msgs::PointCloud2 surfPointsLessFlat2;
-    pcl::toROSMsg(surfPointsLessFlat, surfPointsLessFlat2);
-    surfPointsLessFlat2.header.stamp = laserCloudMsg->header.stamp;
-    surfPointsLessFlat2.header.frame_id = "camera_init";
-    pubSurfPointsLessFlat.publish(surfPointsLessFlat2);
-
-    // pub each scam
-    if(PUB_EACH_LINE)
-    {
-        for(int i = 0; i< N_SCANS; i++)
-        {
-            sensor_msgs::PointCloud2 scanMsg;
-            pcl::toROSMsg(laserCloudScans[i], scanMsg);
-            scanMsg.header.stamp = laserCloudMsg->header.stamp;
-            scanMsg.header.frame_id = "camera_init";
-            pubEachScan[i].publish(scanMsg);
-        }
-    }
-
-    printf("scan registration time %f ms *************\n", t_whole.toc());
+    printf("Scan registration time %f ms *************\n", t_whole.toc());
     if(t_whole.toc() > 100)
-        ROS_WARN("scan registration process over 100ms");
+        std::cout << "Scan registration process over 100ms" << std::endl;
 }
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "scanRegistration");
-    ros::NodeHandle nh;
-
-//    nh.param<int>("scan_line", N_SCANS, 16);
-
     std::vector<std::string> lidarModels {
         "VLP16",
         "BPEARL",
     };
 
-    nh.param<double>("minimum_range", MINIMUM_RANGE, 0.1);
-
-    nh.param<std::string>("lidar_topic", lidar_topic, "/velodyne_points");
-
-//    printf("scan line number %d \n", N_SCANS);
-    std::string sLidarModel;
-
-    nh.param<std::string>("lidar_model", sLidarModel, lidarModels.front());
+    MINIMUM_RANGE = 0.3;
+    std::string sLidarModel = argv[2];
 
     for (size_t i=0; i < lidarModels.size(); i++)
     {
@@ -597,29 +530,11 @@ int main(int argc, char **argv)
 
     printf("Scan line number %d \n", N_SCANS);
 
-    ros::Subscriber subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>(lidar_topic, 100, laserCloudHandler);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+    if (pcl::io::loadPCDFile<pcl::PointXYZ>(argv[1], *cloud) == -1) // Load the file
+            PCL_ERROR("Couldn't read the file \n");
 
-    pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2>("/velodyne_cloud_2", 100);
-
-    pubCornerPointsSharp = nh.advertise<sensor_msgs::PointCloud2>("/laser_cloud_sharp", 100);
-
-    pubCornerPointsLessSharp = nh.advertise<sensor_msgs::PointCloud2>("/laser_cloud_less_sharp", 100);
-
-    pubSurfPointsFlat = nh.advertise<sensor_msgs::PointCloud2>("/laser_cloud_flat", 100);
-
-    pubSurfPointsLessFlat = nh.advertise<sensor_msgs::PointCloud2>("/laser_cloud_less_flat", 100);
-
-    pubRemovePoints = nh.advertise<sensor_msgs::PointCloud2>("/laser_remove_points", 100);
-
-    if(PUB_EACH_LINE)
-    {
-        for(int i = 0; i < N_SCANS; i++)
-        {
-            ros::Publisher tmp = nh.advertise<sensor_msgs::PointCloud2>("/laser_scanid_" + std::to_string(i), 100);
-            pubEachScan.push_back(tmp);
-        }
-    }
-    ros::spin();
+    laserCloudHandler(cloud);
 
     return 0;
 }

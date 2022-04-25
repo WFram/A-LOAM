@@ -9,6 +9,7 @@ Panels:
         - /odometry1/odomPath1
         - /odometry1/PointCloud21
         - /mapping1
+        - /Image1
       Splitter Ratio: 0.5
     Tree Height: 524
   - Class: rviz/Selection
@@ -29,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: surround
+    SyncSource: Image
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -210,7 +211,7 @@ Visualization Manager:
           Color: 255; 255; 255
           Color Transformer: FlatColor
           Decay Time: 0
-          Enabled: false
+          Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
           Min Color: 0; 0; 0
@@ -225,7 +226,7 @@ Visualization Manager:
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
-          Value: false
+          Value: true
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
@@ -238,7 +239,7 @@ Visualization Manager:
           Color: 255; 255; 255
           Color Transformer: FlatColor
           Decay Time: 0
-          Enabled: false
+          Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
           Min Color: 0; 0; 0
@@ -253,7 +254,7 @@ Visualization Manager:
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
-          Value: false
+          Value: true
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
@@ -557,7 +558,7 @@ Visualization Manager:
           Size (Pixels): 3
           Size (m): 0.05000000074505806
           Style: Flat Squares
-          Topic: /velodyne_points
+          Topic: /rslidar_points
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
@@ -618,11 +619,11 @@ Visualization Manager:
           Use Fixed Frame: true
           Use rainbow: true
           Value: false
-      Enabled: false
+      Enabled: true
       Name: scan
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /kitti/image
+      Image Topic: /zed2/zed_node/left/image_rect_color
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -681,7 +682,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 28.594247817993164
+      Distance: 8.829649925231934
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -689,17 +690,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 42.593101501464844
-        Y: -6.99376916885376
-        Z: -2.309800863265991
+        X: -3.4641056060791016
+        Y: 3.5615358352661133
+        Z: -2.3097972869873047
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4597969949245453
+      Pitch: -0.9997970461845398
       Target Frame: body
-      Yaw: 3.064969778060913
+      Yaw: 3.1649563312530518
     Saved: ~
 Window Geometry:
   Displays:

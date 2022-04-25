@@ -90,11 +90,27 @@ int laserCloudCornerLastNum = 0;
 int laserCloudSurfLastNum = 0;
 
 // Transformation from current frame to world frame
-Eigen::Quaterniond q_w_curr(1, 0, 0, 0);
+//Eigen::Quaterniond q_w_curr(1, 0, 0, 0);
+
+//Eigen::Quaterniond q_w_curr(0.525322, 0.8509035, 0, 0);
+//Eigen::Quaterniond q_w_curr(0.525322, 0, 0.8509035, 0);
+//Eigen::Quaterniond q_w_curr(0.525322, 0, 0, 0.8509035);
+Eigen::Quaterniond q_w_curr(0.525322, -0.8509035, 0, 0);
+//Eigen::Quaterniond q_w_curr(0.525322, 0, -0.8509035, 0);
+//Eigen::Quaterniond q_w_curr(0.525322, 0, 0, -0.8509035);
+
 Eigen::Vector3d t_w_curr(0, 0, 0);
 
 // q_curr_last(x, y, z, w), t_curr_last
 double para_q[4] = {0, 0, 0, 1};
+
+//double para_q[4] = {0.8509035, 0, 0, 0.525322};
+//double para_q[4] = {0, 0.8509035, 0, 0.525322};
+//double para_q[4] = {0, 0, 0.8509035, 0.525322};
+//double para_q[4] = {-0.8509035, 0, 0, 0.525322};
+//double para_q[4] = {0, -0.8509035, 0, 0.525322};
+//double para_q[4] = {0, 0, -0.8509035, 0.525322};
+
 double para_t[3] = {0, 0, 0};
 
 Eigen::Map<Eigen::Quaterniond> q_last_curr(para_q);
@@ -509,7 +525,7 @@ int main(int argc, char **argv)
 
             // publish odometry
             nav_msgs::Odometry laserOdometry;
-            laserOdometry.header.frame_id = "/camera_init";
+            laserOdometry.header.frame_id = "camera_init";
             laserOdometry.child_frame_id = "/laser_odom";
             laserOdometry.header.stamp = ros::Time().fromSec(timeSurfPointsLessFlat);
             laserOdometry.pose.pose.orientation.x = q_w_curr.x();
@@ -526,7 +542,7 @@ int main(int argc, char **argv)
             laserPose.pose = laserOdometry.pose.pose;
             laserPath.header.stamp = laserOdometry.header.stamp;
             laserPath.poses.push_back(laserPose);
-            laserPath.header.frame_id = "/camera_init";
+            laserPath.header.frame_id = "camera_init";
             pubLaserPath.publish(laserPath);
 
             // transform corner features and plane features to the scan end point

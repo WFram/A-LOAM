@@ -1,3 +1,5 @@
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 cmake_minimum_required(VERSION 2.8.3)
 project(aloam_velodyne)
 
@@ -36,6 +38,9 @@ catkin_package(
   INCLUDE_DIRS include
 )
 
+
+add_executable(ascanRegistrationDebug src/scanRegistrationDebug.cpp)
+target_link_libraries(ascanRegistrationDebug ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(ascanRegistration src/scanRegistration.cpp)
 target_link_libraries(ascanRegistration ${catkin_LIBRARIES} ${PCL_LIBRARIES})
